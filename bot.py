@@ -1,5 +1,4 @@
 import os
-import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
 from telegram.ext import (
     Application,
@@ -11,30 +10,25 @@ from telegram.ext import (
     filters,
 )
 
-logging.basicConfig(level=logging.INFO)
-
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 YUKASSA_TOKEN = os.environ["YUKASSA_TOKEN"]
 
 GUIDE = {
-    "title": "Гайд по эргономике и планировке",
-    "description": "Как сделать удобную квартиру без ошибок",
-    "price": 990,
-    "file_id": None
+    "title": "Гайд по планировке",
+    "description": "Как сделать удобный интерьер без ошибок",
+    "price": 990
 }
 
-# /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton(f"📘 Купить гайд — {GUIDE['price']}₽", callback_data="buy")]
+        [InlineKeyboardButton("📘 Купить гайд", callback_data="buy")]
     ]
 
     await update.message.reply_text(
-        "Привет! Здесь вы можете купить гайд 👇",
+        "Привет! Нажмите, чтобы купить гайд 👇",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# кнопка купить
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -49,23 +43,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         prices=[LabeledPrice("Гайд", GUIDE["price"] * 100)],
     )
 
-# подтверждение оплаты
 async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.pre_checkout_query.answer(ok=True)
 
-# после оплаты
-async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ Оплата прошла! Вот ваш гайд 👇")
-
-    if GUIDE["file_id"]:
-        await context.bot.send_document(
-            chat_id=update.message.chat_id,
-            document=GUIDE["file_id"]
-        )
-    else:
-        await update.message.reply_text(
-            "Файл пока не прикреплён. Добавьте file_id в код."
-        )
+async def success(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Оплата прошла ✅")
 
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
@@ -73,9 +55,9 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(PreCheckoutQueryHandler(precheckout))
-    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
+    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, success))
 
-    # ВАЖНО: polling для Render (не webhook)
+    # ВАЖНО: только это, без asyncio
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
