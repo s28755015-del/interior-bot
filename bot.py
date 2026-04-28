@@ -1,4 +1,5 @@
 import os
+import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, PreCheckoutQueryHandler, filters, ContextTypes
@@ -49,9 +50,13 @@ async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     else:
         await update.message.reply_text("Напишите мне в личку и я пришлю гайд вручную 🙏")
 
-app = Application.builder().token(BOT_TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(button))
-app.add_handler(PreCheckoutQueryHandler(precheckout))
-app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
-app.run_polling()
+async def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button))
+    app.add_handler(PreCheckoutQueryHandler(precheckout))
+    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
+    await app.run_polling()
+
+if __name__ == "__main__":
+    asyncio.run(main())
