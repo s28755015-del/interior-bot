@@ -1,8 +1,15 @@
 import os
-import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, PreCheckoutQueryHandler, filters, ContextTypes
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    CallbackQueryHandler,
+    MessageHandler,
+    PreCheckoutQueryHandler,
+    filters,
+    ContextTypes
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -11,23 +18,34 @@ YUKASSA_TOKEN = os.environ["YUKASSA_TOKEN"]
 
 GUIDES = {
     "guide_1": {
-        "title": "Гайд по цвету в интерьере",
-        "description": "Как подбирать цвета и не ошибиться",
+        "title": "Эргономика и планировка интерьера",
+        "description": "Как грамотно распланировать пространство и избежать ошибок",
         "price": 990,
         "file_id": None,
     },
 }
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[InlineKeyboardButton(f"📘 {g['title']} — {g['price']}₽", callback_data=key)] for key, g in GUIDES.items()]
-    await update.message.reply_text("Выберите гайд 👇", reply_markup=InlineKeyboardMarkup(keyboard))
+    keyboard = [
+        [InlineKeyboardButton(
+            f"📘 {GUIDES['guide_1']['title']} — {GUIDES['guide_1']['price']}₽",
+            callback_data="guide_1"
+        )]
+    ]
+
+    await update.message.reply_text(
+        "Привет! Выбери продукт 👇",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
     guide = GUIDES.get(query.data)
     if not guide:
         return
+
     await context.bot.send_invoice(
         chat_id=query.message.chat_id,
         title=guide["title"],
@@ -42,23 +60,21 @@ async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.pre_checkout_query.answer(ok=True)
 
 async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    guide_key = update.message.successful_payment.invoice_payload
-    guide = GUIDES.get(guide_key)
-    await update.message.reply_text("✅ Оплата прошла! Отправляю гайд...")
-    if guide and guide["file_id"]:
-        await context.bot.send_document(chat_id=update.message.chat_id, document=guide["file_id"])
-    else:
-        await update.message.reply_text("Напишите мне в личку и я пришлю гайд вручную 🙏")
+    await update.message.reply_text("✅ Оплата прошла успешно! Спасибо 🙌")
 
-async def main():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    await update.message.reply_text(
+        "Если у тебя есть файл — его можно автоматически отправить здесь."
+    )
+
+def main():
     app = Application.builder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button))
     app.add_handler(PreCheckoutQueryHandler(precheckout))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
-    await app.run_polling()
+
+    app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
