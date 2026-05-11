@@ -20,7 +20,7 @@ GUIDES = {
     "guide_1": {
         "title": "Эргономика и планировка интерьера",
         "description": "Как грамотно распланировать пространство и избежать ошибок",
-        "price": 950,
+        "price": 150,
         "file_id": "BQACAgIAAxkBAAMxagGz568rXfWa7bPe_-n3D4LBG7kAAsOhAAJM5wlI87vG4qVZCOM7BA",
     },
 }
