@@ -56,14 +56,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         prices=[LabeledPrice(guide["title"], guide["price"] * 100)],
     )
 
-async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.pre_checkout_query.answer(ok=True)
-
 async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ Оплата прошла успешно! Спасибо 🙌")
+    guide = GUIDES["guide_1"]
 
-    await update.message.reply_text(
-        "Если у тебя есть файл — его можно автоматически отправить здесь."
+    await update.message.reply_text("✅ Оплата прошла успешно! Отправляю PDF 👇")
+
+    await context.bot.send_document(
+        chat_id=update.message.chat_id,
+        document=guide["file_id"]
     )
 
 def main():
